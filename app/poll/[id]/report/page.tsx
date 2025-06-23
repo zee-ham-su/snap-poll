@@ -1,19 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-export default function ReportPollPage({ params }: { params: { id: string } }) {
+export default function ReportPollPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pollId, setPollId] = useState<string | null>(null);
+
+  useEffect(() => {
+    params.then((resolvedParams) => {
+      setPollId(resolvedParams.id);
+    });
+  }, [params]);
 
   const handleSubmit = async () => {
+    if (!pollId) return;
+    
     setIsSubmitting(true);
 
-    const response = await fetch(`/api/polls/${params.id}/report`, {
+    const response = await fetch(`/api/polls/${pollId}/report`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -23,7 +32,7 @@ export default function ReportPollPage({ params }: { params: { id: string } }) {
 
     if (response.ok) {
       alert("Report submitted successfully.");
-      router.push(`/poll/${params.id}`);
+      router.push(`/poll/${pollId}`);
     } else {
       alert("Failed to submit the report. Please try again.");
     }
@@ -41,10 +50,10 @@ export default function ReportPollPage({ params }: { params: { id: string } }) {
         className="w-full mb-4"
       />
       <div className="flex justify-center gap-4">
-        <Button onClick={handleSubmit} disabled={isSubmitting || !reason}>
+        <Button onClick={handleSubmit} disabled={isSubmitting || !reason || !pollId}>
           {isSubmitting ? "Submitting..." : "Submit Report"}
         </Button>
-        <Button variant="outline" onClick={() => router.push(`/poll/${params.id}`)}>
+        <Button variant="outline" onClick={() => pollId && router.push(`/poll/${pollId}`)}>
           Cancel
         </Button>
       </div>

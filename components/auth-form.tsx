@@ -13,6 +13,7 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in")
   const router = useRouter();
 
   const handleAuth = async (e: React.FormEvent) => {

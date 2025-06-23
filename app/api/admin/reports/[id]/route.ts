@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const { action } = await req.json();
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { action } = await request.json();
+  const params = await context.params;
 
   if (!action) {
     return NextResponse.json({ error: "Action is required." }, { status: 400 });

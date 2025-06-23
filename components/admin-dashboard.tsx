@@ -77,7 +77,7 @@ export function AdminDashboard() {
     fetchDashboard()
   }, [user?.id])
 
-  const handleAdminAction = async (action: string, targetId: string, additionalData?: unknown) => {
+  const handleAdminAction = async (action: string, targetId: string, additionalData?: Record<string, unknown>) => {
     try {
       const res = await fetch('/api/admin/dashboard', {
         method: 'POST',
@@ -89,7 +89,7 @@ export function AdminDashboard() {
           pollId: action.includes('poll') ? targetId : undefined,
           reportId: action.includes('report') ? targetId : undefined,
           userId: user?.id,
-          ...additionalData
+          ...(additionalData || {})
         })
       })
 
