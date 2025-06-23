@@ -5,6 +5,7 @@ import { supabaseServer } from "@/lib/supabase-server"
 import { cookies } from "next/headers"
 import { v4 as uuidv4 } from "uuid"
 import type { Poll, PollWithOptions, PollWithOptionsAndVotes } from "@/types/database"
+import { rateLimit } from "@/lib/rate-limit"
 
 // Create a new poll with options
 export async function createPoll(formData: FormData) {
@@ -50,6 +51,19 @@ export async function createPoll(formData: FormData) {
   }
 
   try {
+    const userId = user_id;
+
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+    const rateLimitKey = `createPoll:${userId}`;
+    const isAllowed = rateLimit(rateLimitKey, 5); // Allow max 5 polls per minute
+
+    if (!isAllowed) {
+      throw new Error("Rate limit exceeded. Please try again later.");
+    }
+
     // Insert poll with new fields
     const { data: poll, error: pollError } = await supabaseServer
       .from("polls")

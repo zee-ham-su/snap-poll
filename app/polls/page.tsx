@@ -1,19 +1,30 @@
-"use client"
+import Link from "next/link";
+import { getPolls } from "@/actions/poll-actions";
+import { Button } from "@/components/ui/button";
 
-import { PollSearch } from "@/components/poll-search"
-
-export default function PollsPage() {
+export default async function PollsPage() {
+  const polls = await getPolls();
   return (
     <div className="container py-10">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-4">Discover Polls</h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Search and explore polls from the community. Find trending topics, 
-          browse by category, or search for specific interests.
-        </p>
-      </div>
-      
-      <PollSearch />
+      <h1 className="text-3xl font-bold mb-8 text-center">Browse Polls</h1>
+      {polls.length === 0 ? (
+        <div className="text-center text-gray-500">No polls found.</div>
+      ) : (
+        <ul className="space-y-4 max-w-2xl mx-auto">
+          {polls.map((poll) => (
+            <li key={poll.id} className="border rounded-lg p-4 flex flex-col gap-2">
+              <div className="font-semibold text-lg">{poll.title}</div>
+              {poll.description && <div className="text-gray-600">{poll.description}</div>}
+              <Button asChild variant="outline" size="sm" className="w-fit mt-2">
+                <Link href={`/poll/${poll.id}`}>Vote / View</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="w-fit mt-2">
+                <Link href={`/poll/${poll.id}/results`}>View Results</Link>
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
-  )
+  );
 }

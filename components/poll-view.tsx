@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { voteForOption } from "@/actions/poll-actions"
 import type { PollWithOptions } from "@/types/database"
+import ReCAPTCHA from "react-google-recaptcha"
 
 interface PollViewProps {
   poll: PollWithOptions
@@ -19,10 +20,20 @@ export function PollView({ poll }: PollViewProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
 
-  const handleSubmit = async (formData: FormData) => {
+  const handleCaptchaChange = (token: string | null) => {
+    setCaptchaToken(token)
+  }
+
+  const handleSubmit = async (formData: FormData): Promise<void> => {
     if (!selectedOption) {
       setError("Please select an option")
+      return
+    }
+
+    if (!captchaToken) {
+      setError("Please complete the CAPTCHA")
       return
     }
 
@@ -30,6 +41,7 @@ export function PollView({ poll }: PollViewProps) {
     setError(null)
 
     formData.append("optionId", selectedOption)
+    formData.append("captchaToken", captchaToken)
     const result = await voteForOption(formData)
 
     if (result.error) {
@@ -95,14 +107,28 @@ export function PollView({ poll }: PollViewProps) {
               </div>
             ))}
           </RadioGroup>
+
+          <ReCAPTCHA
+            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+            onChange={handleCaptchaChange}
+          />
         </CardContent>
         <CardFooter className="flex justify-between">
           <Button type="submit" disabled={isSubmitting || !selectedOption}>
             {isSubmitting ? "Submitting..." : "Submit Vote"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => router.push(`/poll/${poll.id}/results`)}>
-            View Results
-          </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => router.push(`/poll/${poll.id}/results`)}>
+              View Results
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push(`/poll/${poll.id}/report`)}
+            >
+              Report
+            </Button>
+          </div>
         </CardFooter>
       </form>
     </Card>
