@@ -6,7 +6,7 @@ export default function NotFound() {
     <div className="container flex flex-col items-center justify-center min-h-[70vh] text-center">
       <h1 className="text-4xl font-bold mb-4">404 - Not Found</h1>
       <p className="text-xl text-muted-foreground mb-8">
-        The poll you're looking for doesn't exist or has been removed.
+        The poll you&apos;re looking for doesn&apos;t exist or has been removed.
       </p>
       <Button asChild>
         <Link href="/">Return Home</Link>

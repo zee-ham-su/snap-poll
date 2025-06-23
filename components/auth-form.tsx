@@ -11,8 +11,6 @@ export default function AuthForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in")
   const [message, setMessage] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter();
@@ -20,21 +18,18 @@ export default function AuthForm() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
     setMessage(null)
     const supabase = getSupabaseClient()
     if (!supabase) {
-      setError("Supabase client not initialized")
+      setMessage("Supabase client not initialized")
       setLoading(false)
       return
     }
     
     try {
       if (mode === "sign-in") {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) {
-          setError(error.message)
-        } else if (data.user) {
+        const { data } = await supabase.auth.signInWithPassword({ email, password })
+        if (data.user) {
           setMessage("Signed in successfully!")
           // Wait a bit for auth context to update, then redirect
           setTimeout(() => {
@@ -43,10 +38,8 @@ export default function AuthForm() {
           }, 500)
         }
       } else {
-        const { data, error } = await supabase.auth.signUp({ email, password })
-        if (error) {
-          setError(error.message)
-        } else if (data.user) {
+        const { data } = await supabase.auth.signUp({ email, password })
+        if (data.user) {
           if (data.user.email_confirmed_at) {
             // Email confirmed immediately (confirmation disabled)
             setMessage("Account created successfully!")
@@ -60,8 +53,8 @@ export default function AuthForm() {
           }
         }
       }
-    } catch (error) {
-      setError("An unexpected error occurred")
+    } catch {
+      setMessage("An unexpected error occurred")
     } finally {
       setLoading(false)
     }
@@ -100,7 +93,6 @@ export default function AuthForm() {
           )}
         </button>
       </div>
-      {error && <div className="text-red-500 text-sm">{error}</div>}
       {message && <div className="text-green-600 text-sm">{message}</div>}
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Loading..." : mode === "sign-in" ? "Sign In" : "Sign Up"}
@@ -108,7 +100,7 @@ export default function AuthForm() {
       <div className="text-center text-sm mt-2">
         {mode === "sign-in" ? (
           <span>
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <button type="button" className="underline" onClick={() => setMode("sign-up")}>Sign Up</button>
           </span>
         ) : (

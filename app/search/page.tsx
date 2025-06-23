@@ -36,7 +36,7 @@ export default function SearchPage() {
 
   return (
     <div className="container py-10">
-      <h1 className="text-3xl font-bold mb-8 text-center">Search Results for "{query}"</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">Search Results for &quot;{query}&quot;</h1>
 
       {loading ? (
         <div className="text-center">Loading...</div>

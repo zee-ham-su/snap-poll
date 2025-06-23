@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is already an admin
-    const { data: existingAdmin, error: adminCheckError } = await supabaseServer
+    const { data: existingAdmin } = await supabaseServer
       .from("admin_users")
       .select("id")
       .eq("user_id", users.id)

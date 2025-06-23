@@ -21,7 +21,7 @@ export function PollResultsRealtime({ pollId, initialPoll }: { pollId: string, i
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'votes' },
-        (payload) => {
+        () => {
           fetchPoll();
         }
       )

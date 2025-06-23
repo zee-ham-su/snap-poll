@@ -42,7 +42,7 @@ export default function MyPollsPage() {
     <div className="container py-10">
       <h1 className="text-3xl font-bold mb-8 text-center">My Polls</h1>
       {polls.length === 0 ? (
-        <div className="text-center text-gray-500">You haven't created any polls yet.</div>
+        <div className="text-center text-gray-500">You haven&apos;t created any polls yet.</div>
       ) : (
         <ul className="space-y-4 max-w-2xl mx-auto">
           {polls.map((poll) => (

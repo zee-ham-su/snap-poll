@@ -39,7 +39,7 @@ export default function AdminSetupPage() {
       } else {
         setResult({ success: false, message: data.error })
       }
-    } catch (error) {
+    } catch {
       setResult({ success: false, message: "Network error occurred" })
     } finally {
       setLoading(false)
@@ -71,7 +71,7 @@ export default function AdminSetupPage() {
                 required
               />
               <p className="text-sm text-muted-foreground">
-                Must be an email address that's already registered
+                Must be an email address that&apos;s already registered
               </p>
             </div>
 
