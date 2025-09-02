@@ -147,40 +147,21 @@ export async function getPollWithVotes(id: string): Promise<PollWithOptionsAndVo
     return null
   }
 
+  // Fetch options with vote counts using RPC (more efficient than N+1)
   const { data: options, error: optionsError } = await supabaseServer
-    .from("options")
-    .select("id, poll_id, text, created_at")
-    .eq("poll_id", id)
-    .order("created_at", { ascending: true })
+    .rpc('get_poll_options_with_counts', { poll_uuid: id })
 
   if (optionsError) {
     console.error("Error fetching options:", optionsError)
     return null
   }
 
-  // Get vote counts for each option
-  const optionsWithVotes = await Promise.all(
-    options.map(async (option) => {
-      const { count, error: voteError } = await supabaseServer
-        .from("votes")
-        .select("id", { count: "exact", head: true })
-        .eq("option_id", option.id)
-
-      if (voteError) {
-        console.error("Error counting votes:", voteError)
-        return { ...option, votes: 0 }
-      }
-
-      return { ...option, votes: count || 0 }
-    }),
-  )
-
-  // Calculate total votes
-  const totalVotes = optionsWithVotes.reduce((sum, option) => sum + option.votes, 0)
+  const optionsWithVotes = options
+  const totalVotes = optionsWithVotes.reduce((sum: number, option: any) => sum + (option.votes || 0), 0)
 
   return {
     ...poll,
-    options: optionsWithVotes,
+  options: optionsWithVotes,
     total_votes: totalVotes,
   }
 }

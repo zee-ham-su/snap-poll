@@ -15,6 +15,7 @@ import type { PollCategory } from "@/types/database"
 export function CreatePollForm() {
   const router = useRouter()
   const { user } = useAuth();
+  const [title, setTitle] = useState("")
   const [options, setOptions] = useState(["", ""])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -98,6 +99,12 @@ export function CreatePollForm() {
     router.push(`/poll/${result.pollId}`)
   }
 
+  // A poll is submittable when there's a non-empty title and all options are filled (min 2)
+  const isFormValid =
+    title.trim().length > 0 &&
+    options.length >= 2 &&
+    options.every((o) => o.trim().length > 0)
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -109,7 +116,14 @@ export function CreatePollForm() {
 
           <div className="space-y-2">
             <Label htmlFor="title">Poll Question</Label>
-            <Input id="title" name="title" placeholder="What's your favorite programming language?" required />
+            <Input
+              id="title"
+              name="title"
+              placeholder="What's your favorite programming language?"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
           </div>
 
           <div className="space-y-2">
@@ -234,7 +248,11 @@ export function CreatePollForm() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={!isFormValid || isSubmitting}
+            className="w-full rounded-md transition-colors hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             {isSubmitting ? "Creating Poll..." : "Create Poll"}
           </Button>
         </CardFooter>

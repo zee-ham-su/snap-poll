@@ -17,10 +17,17 @@ export function PollResultsRealtime({ pollId, initialPoll }: { pollId: string, i
       if (!ignore && data.poll) setPoll(data.poll);
     };
     // Subscribe to votes table for this poll
-    const channel = supabase.channel(`votes-poll-${pollId}`)
+    const channel = supabase
+      .channel(`votes-poll-${pollId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'votes' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'votes',
+          // Only receive events for options that belong to this poll
+          filter: `option_id IN (SELECT id FROM options WHERE poll_id = '${pollId}')`,
+        } as any,
         () => {
           fetchPoll();
         }

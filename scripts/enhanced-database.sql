@@ -81,9 +81,18 @@ CREATE INDEX IF NOT EXISTS idx_polls_category ON polls(category);
 CREATE INDEX IF NOT EXISTS idx_polls_expires_at ON polls(expires_at);
 CREATE INDEX IF NOT EXISTS idx_polls_is_active ON polls(is_active);
 CREATE INDEX IF NOT EXISTS idx_polls_user_id ON polls(user_id);
+-- New: speed up option lookups and vote counts
+CREATE INDEX IF NOT EXISTS idx_options_poll_id ON options(poll_id);
+CREATE INDEX IF NOT EXISTS idx_votes_option_id ON votes(option_id);
+CREATE INDEX IF NOT EXISTS idx_votes_created_at ON votes(created_at);
 CREATE INDEX IF NOT EXISTS idx_comments_poll_id ON comments(poll_id);
 CREATE INDEX IF NOT EXISTS idx_poll_views_poll_id ON poll_views(poll_id);
 CREATE INDEX IF NOT EXISTS idx_poll_reports_status ON poll_reports(status);
+
+-- Optional: faster ILIKE search over title/description via trigram
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_polls_title_trgm ON polls USING GIN (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_polls_description_trgm ON polls USING GIN (description gin_trgm_ops);
 
 -- Create functions for analytics
 CREATE OR REPLACE FUNCTION get_poll_stats(poll_uuid UUID)
@@ -100,6 +109,30 @@ BEGIN
     (SELECT COUNT(DISTINCT COALESCE(v.user_id::text, v.anonymous_id)) FROM votes v JOIN options o ON v.option_id = o.id WHERE o.poll_id = poll_uuid) as unique_voters,
     (SELECT COUNT(*) FROM poll_views WHERE poll_id = poll_uuid) as total_views,
     (SELECT COUNT(DISTINCT COALESCE(user_id::text, anonymous_id)) FROM poll_views WHERE poll_id = poll_uuid) as unique_viewers;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Efficient option vote counts for a poll (avoids N+1 queries)
+CREATE OR REPLACE FUNCTION get_poll_options_with_counts(poll_uuid UUID)
+RETURNS TABLE(
+  id UUID,
+  poll_id UUID,
+  text TEXT,
+  created_at TIMESTAMPTZ,
+  votes BIGINT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT o.id, o.poll_id, o.text, o.created_at, COALESCE(v.cnt, 0) AS votes
+  FROM options o
+  LEFT JOIN (
+    SELECT option_id, COUNT(*) AS cnt
+    FROM votes
+    WHERE option_id IN (SELECT id FROM options WHERE poll_id = poll_uuid)
+    GROUP BY option_id
+  ) v ON v.option_id = o.id
+  WHERE o.poll_id = poll_uuid
+  ORDER BY o.created_at ASC;
 END;
 $$ LANGUAGE plpgsql;
 
