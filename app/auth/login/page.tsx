@@ -10,6 +10,10 @@ export default function LoginPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
+/**
+ * login function
+ */
+
   // Redirect authenticated users away from auth pages
   useEffect(() => {
     if (!loading && user) router.replace("/")
